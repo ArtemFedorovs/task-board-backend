@@ -8,7 +8,10 @@ async function bootstrap() {
     .setTitle('Notes API')
     .setDescription('The notes API description')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
+
+  app.enableCors();
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
