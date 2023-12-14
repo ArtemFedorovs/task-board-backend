@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
@@ -26,7 +26,8 @@ export class UsersService {
     return await this.userRepository.save(newUser);
   }
 
-  async login(loginUserDto: LoginUserDto) { // To do: hash password in DB
+  async login(loginUserDto: LoginUserDto) {
+    // To do: hash password in DB
     const user = await this.userRepository.findOneBy({
       user_email: loginUserDto.email,
     });
@@ -36,19 +37,41 @@ export class UsersService {
     };
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async getUserProfile(id: number) {
+    const user = await this.userRepository.findOneBy({
+      id: id,
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    } else {
+      return {
+        name: user.name,
+        surname: user.surname,
+      };
+    }
   }
 
-  async findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
+  async updateUserProfile(id: number, updateUserDto: UpdateUserDto) {
+    const user = await this.userRepository.findOneBy({
+      id: id,
+    });
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+    if (updateUserDto.name) {
+      user.name = updateUserDto.name;
+    }
+
+    if (updateUserDto.surname) {
+      user.surname = updateUserDto.surname;
+    }
+    const newUserData = await this.userRepository.save(user);
+    return {
+      name: newUserData.name,
+      surname: newUserData.surname,
+    };
   }
 }

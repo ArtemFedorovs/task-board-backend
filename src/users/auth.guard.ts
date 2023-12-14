@@ -34,3 +34,11 @@ export class AuthGuard implements CanActivate {
     return type === 'Bearer' ? token : undefined;
   }
 }
+
+export type TokenDataModel = {
+  user: {
+    sub: number;
+    iat: number;
+    exp: number;
+  };
+};

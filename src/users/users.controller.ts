@@ -1,25 +1,31 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Put,
+  UseGuards,
+  ConflictException,
+  Req,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
-import { AuthGuard } from './auth.guard';
+import { AuthGuard, TokenDataModel } from './auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
-
+import { Request } from 'express';
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post()
-  async create(@Body() createUserDto: CreateUserDto) {
+  @Put('/create')
+  async createUser(@Body() createUserDto: CreateUserDto) {
     try {
       const createdUser = await this.usersService.create(createUserDto);
       return { message: 'User created successfully', user: createdUser };
     } catch (error) {
-      return {
-        message: 'Failed to create user',
-        error: error.message || 'Internal server error',
-      }; // update errors
+      throw new ConflictException('User already exists');
     }
   }
 
@@ -27,36 +33,41 @@ export class UsersController {
   async login(@Body() loginUserDto: LoginUserDto) {
     try {
       const jwtToken = await this.usersService.login(loginUserDto);
-      return { message: 'Succsessful login', token: jwtToken };
+      return { isLoginSuccessfull: true, token: jwtToken };
     } catch (error) {
-      return {
-        message: 'Failed to login user',
-        error: error.message || 'Internal server error',
-      }; // remake errors
+      return { isLoginSuccessfull: false };
     }
   }
 
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
-  @Get('/checkAuth')
-  findAll() {
-    return 'nice';
+  @Get('/profile')
+  async getUserProfile(@Req() request: TokenDataModel) {
+    try {
+      const userProfile = await this.usersService.getUserProfile(
+        request.user.sub,
+      );
+      return userProfile;
+    } catch (error) {
+      return error;
+    }
   }
 
+  @ApiBearerAuth()
   @UseGuards(AuthGuard)
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
-  }
-
-  @UseGuards(AuthGuard)
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  @Post('/profile')
+  async updateUserProfile(
+    @Req() request: Request<UpdateUserDto> & TokenDataModel,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    try {
+      const updateUser = await this.usersService.updateUserProfile(
+        request.user.sub,
+        updateUserDto,
+      );
+      return updateUser;
+    } catch (error) {
+      return error;
+    }
   }
 }
