@@ -18,10 +18,6 @@ import appConfig from '../config/app.config';
         signOptions: { expiresIn: '660s' },
       }),
     }),
-    // JwtModule.register({
-    //   secret: 'process.env.JWT_SECRET_STRING',
-    //   signOptions: { expiresIn: '60s' },
-    // }),
   ],
   controllers: [UsersController],
   providers: [UsersService],

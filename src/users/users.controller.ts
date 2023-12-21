@@ -32,10 +32,10 @@ export class UsersController {
   @Post('/login')
   async login(@Body() loginUserDto: LoginUserDto) {
     try {
-      const jwtToken = await this.usersService.login(loginUserDto);
-      return { isLoginSuccessfull: true, token: jwtToken };
+      const response = await this.usersService.login(loginUserDto);
+      return response;
     } catch (error) {
-      return { isLoginSuccessfull: false };
+      return error;
     }
   }
 

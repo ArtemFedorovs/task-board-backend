@@ -31,10 +31,12 @@ export class UsersService {
     const user = await this.userRepository.findOneBy({
       user_email: loginUserDto.email,
     });
-    const payload = { sub: user.id };
-    return {
-      access_token: await this.jwtService.signAsync(payload),
-    };
+    if (user.password === loginUserDto.password) {
+      const access_token = await this.jwtService.signAsync({ sub: user.id });
+      return { isLoginSuccessfull: true, token: access_token };
+    } else {
+      return { isLoginSuccessfull: false };
+    }
   }
 
   async getUserProfile(id: number) {
