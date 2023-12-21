@@ -7,6 +7,7 @@ import {
   UseGuards,
   ConflictException,
   Req,
+  Param,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -69,5 +70,38 @@ export class UsersController {
     } catch (error) {
       return error;
     }
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Post('/subscribe/:taskId')
+  async subscribeToTaskStatusChanges(
+    @Req() request: Request<UpdateUserDto> & TokenDataModel,
+    @Param('taskId') taskId: string,
+  ) {
+    try {
+      await this.usersService.subscribeToTaskStatusChanges(
+        request.user.sub,
+        +taskId,
+      );
+      return { message: 'Successfully subscribed' };
+    } catch (error) {
+      return error;
+    }
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Post('/unsubscribe/:taskId')
+  async unSubscribeToTaskStatusChanges(@Param('taskId') taskId: string) {
+    // try {
+    //   const updateUser = await this.usersService.unSubscribeToTaskStatusChanges(
+    //     request.user.sub,
+    //     updateUserDto,
+    //   );
+    //   return updateUser;
+    // } catch (error) {
+    //   return error;
+    // }
   }
 }

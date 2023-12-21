@@ -2,16 +2,16 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { Task } from '../task/entities/task.entity';
 import { Board } from '../board/entities/board.entity';
-import appConfig from './app.config';
+import 'dotenv/config';
 
 export const dataSourceСonfig: DataSourceOptions = {
   type: 'postgres',
-  host: appConfig().dbHost,
-  port: +appConfig().dbPort,
-  username: appConfig().dbUsername,
-  password: appConfig().dbPassword,
-  database: appConfig().dbName,
-  migrations: ['migrations/**'],
+  host: process.env.DB_HOST,
+  port: +process.env.DB_PORT,
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  migrations: ['dist/migrations/*.js'],
   entities: [User, Task, Board],
   ssl: true,
 };

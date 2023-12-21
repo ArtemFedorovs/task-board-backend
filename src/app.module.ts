@@ -4,6 +4,7 @@ import { UsersModule } from './users/users.module';
 import { BoardModule } from './board/board.module';
 import { TaskModule } from './task/task.module';
 import { dataSourceСonfig } from './config/data-source-config';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { dataSourceСonfig } from './config/data-source-config';
     UsersModule,
     BoardModule,
     TaskModule,
+    NotificationModule,
   ],
 })
 export class AppModule {}

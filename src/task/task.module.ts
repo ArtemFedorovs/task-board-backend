@@ -3,18 +3,16 @@ import { TaskService } from './task.service';
 import { TaskController } from './task.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Task } from './entities/task.entity';
+import { User } from '../users/entities/user.entity';
+import { Board } from '../board/entities/board.entity';
 import { JwtModule } from '@nestjs/jwt';
-import appConfig from '../config/app.config';
+import { jwtСonfig } from '../config/jwt-config';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Task]),
+    TypeOrmModule.forFeature([Task, User, Board]),
     JwtModule.registerAsync({
-      useFactory: () => ({
-        secret: appConfig().jwtSecretString,
-        global: true,
-        signOptions: { expiresIn: '660s' },
-      }),
+      useFactory: () => jwtСonfig,
     }),
   ],
   controllers: [TaskController],

@@ -1,4 +1,5 @@
 export enum Status {
+  BACKLOG = 'Backlog',
   OPEN = 'Open',
   BLOCKED = 'Blocked',
   READYFFORDEVELOP = 'Ready for develop',

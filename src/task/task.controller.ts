@@ -1,34 +1,64 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Put,
+  Get,
+  Post,
+  Body,
+  Req,
+  UseGuards,
+  Delete,
+} from '@nestjs/common';
 import { TaskService } from './task.service';
 import { CreateTaskDto } from './dto/create-task.dto';
-import { UpdateTaskDto } from './dto/update-task.dto';
+// import { UpdateTaskDto } from './dto/update-task.dto';
+import { AuthGuard, TokenDataModel } from '../users/auth.guard';
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { Request } from 'express';
 
 @Controller('task')
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
-  @Post()
-  create(@Body() createTaskDto: CreateTaskDto) {
-    return this.taskService.create(createTaskDto);
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Put()
+  async createTask(
+    @Body() createUserDto: CreateTaskDto,
+    @Req() request: Request<CreateTaskDto> & TokenDataModel,
+  ) {
+    try {
+      const createdTask = await this.taskService.create(
+        createUserDto,
+        request.user.sub,
+      );
+      return { message: 'Task created successfully', task: createdTask };
+    } catch (error) {
+      return error;
+    }
   }
 
-  @Get()
-  findAll() {
-    return this.taskService.findAll();
-  }
+  // @Post()
+  // create(@Body() createTaskDto: CreateTaskDto) {
+  //   return this.taskService.create(createTaskDto);
+  // }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.taskService.findOne(+id);
-  }
+  // @Get()
+  // findAll() {
+  //   return this.taskService.findAll();
+  // }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto) {
-    return this.taskService.update(+id, updateTaskDto);
-  }
+  // @Get(':id')
+  // findOne(@Param('id') id: string) {
+  //   return this.taskService.findOne(+id);
+  // }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.taskService.remove(+id);
-  }
+  // @Patch(':id')
+  // update(@Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto) {
+  //   return this.taskService.update(+id, updateTaskDto);
+  // }
+
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.taskService.remove(+id);
+  // }
 }

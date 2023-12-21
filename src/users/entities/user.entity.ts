@@ -34,8 +34,12 @@ export class User {
   boards: Board[];
 
   @OneToMany(() => Task, (task) => task.assigned_user)
-  assigned_tasks: Board[];
+  assigned_tasks: Task[];
 
   @OneToMany(() => Task, (task) => task.creator)
-  created_tasks: Board[];
+  created_tasks: Task[];
+
+  @ManyToMany(() => Task)
+  @JoinTable()
+  tracked_tasks: Task[];
 }
