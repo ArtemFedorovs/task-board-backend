@@ -31,4 +31,13 @@ export class MailerService {
     };
     await this.transporter.sendMail(mailOptions);
   }
+
+  async sendResetPasswordMail(to: string, token: string): Promise<void> {
+    const mailOptions = {
+      to: `${to}`,
+      subject: 'Email verification',
+      text: `Please reset your password here: ${process.env.APP_HOST}/reset-password/${token}`,
+    };
+    await this.transporter.sendMail(mailOptions);
+  }
 }

@@ -13,6 +13,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { RefreshTokenDto } from './dto/refresh-user.dto';
+import { ResetPasswordRequestDto } from './dto/reset-password-request-dto';
 import { AuthGuard, TokenDataModel } from '../utility/auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { Request } from 'express';
@@ -57,6 +58,31 @@ export class UsersController {
       const response = await this.usersService.refreshToken(
         refreshTokenDto.refreshToken,
       );
+      return response;
+    } catch (error) {
+      return error;
+    }
+  }
+
+  @Post('/reset-password/request')
+  async resetPasswordRequest(
+    @Body() resetPasswordRequestDto: ResetPasswordRequestDto,
+  ) {
+    try {
+      const response = await this.usersService.resetPasswordRequest(
+        resetPasswordRequestDto.email,
+        resetPasswordRequestDto.newPassword,
+      );
+      return response;
+    } catch (error) {
+      return error;
+    }
+  }
+
+  @Get('/reset-password/:token')
+  async resetPassword(@Param('token') token: string) {
+    try {
+      const response = await this.usersService.resetPassword(token);
       return response;
     } catch (error) {
       return error;

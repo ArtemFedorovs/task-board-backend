@@ -36,8 +36,8 @@ export class UsersService {
     if (user) {
       throw new ConflictException('User already exists');
     }
-    const rounds = 10;
-    const passwordHash = await bcrypt.hash(createUserDto.password, rounds);
+
+    const passwordHash = await bcrypt.hash(createUserDto.password, 10);
 
     const userData = this.userRepository.create({
       user_email: createUserDto.email,
@@ -107,6 +107,32 @@ export class UsersService {
       isLoginSuccessfull: true,
       access_token: newAccessToken,
       refreshToken: newRefreshToken,
+    };
+  }
+
+  async resetPasswordRequest(email: string, newPassword: string) {
+    const resetPasswordToken = await this.jwtService.signAsync({
+      type: 'reset_password_token',
+      sub: { email: email, newPassword: newPassword },
+    });
+    await this.mailerService.sendResetPasswordMail(email, resetPasswordToken);
+    return {
+      isResetPasswordEmailSend: true,
+    };
+  }
+
+  async resetPassword(token: string) {
+    const payload = await this.jwtService.verifyAsync(token, {
+      secret: process.env.JWT_SECRET_STRING,
+    });
+    const user = await this.userRepository.findOneBy({
+      user_email: payload.sub.email,
+    });
+    user.password = await bcrypt.hash(payload.sub.newPassword, 10);
+    await this.userRepository.save(user);
+
+    return {
+      isPasswordReseted: true,
     };
   }
 
