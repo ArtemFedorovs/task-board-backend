@@ -22,6 +22,6 @@ export class Board {
   @ManyToOne(() => User, (user) => user.owned_boards)
   owner: User;
 
-  @OneToMany(() => Task, (task) => task.board)
+  @OneToMany(() => Task, (task) => task.board, { nullable: true })
   tasks: Task;
 }

@@ -5,7 +5,6 @@ import {
   Body,
   Put,
   UseGuards,
-  ConflictException,
   Req,
   Param,
 } from '@nestjs/common';
@@ -13,9 +12,11 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
-import { AuthGuard, TokenDataModel } from './auth.guard';
+import { RefreshTokenDto } from './dto/refresh-user.dto';
+import { AuthGuard, TokenDataModel } from '../utility/auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { Request } from 'express';
+
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -26,7 +27,17 @@ export class UsersController {
       const createdUser = await this.usersService.create(createUserDto);
       return { message: 'User created successfully', user: createdUser };
     } catch (error) {
-      throw new ConflictException('User already exists');
+      return error;
+    }
+  }
+
+  @Get('/verification/:userId')
+  async verifyEmail(@Param('userId') userId: string) {
+    try {
+      await this.usersService.verifyEmail(userId);
+      return 'Successfully verified';
+    } catch (error) {
+      return error;
     }
   }
 
@@ -34,6 +45,18 @@ export class UsersController {
   async login(@Body() loginUserDto: LoginUserDto) {
     try {
       const response = await this.usersService.login(loginUserDto);
+      return response;
+    } catch (error) {
+      return error;
+    }
+  }
+
+  @Post('/refresh-token')
+  async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
+    try {
+      const response = await this.usersService.refreshToken(
+        refreshTokenDto.refreshToken,
+      );
       return response;
     } catch (error) {
       return error;

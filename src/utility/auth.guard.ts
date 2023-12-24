@@ -5,28 +5,37 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-// import { jwtConstants } from './constants';
 import { Request } from 'express';
-
+import { EntityManager } from 'typeorm';
+import { InjectEntityManager } from '@nestjs/typeorm';
+import { User } from '../users/entities/user.entity';
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private jwtService: JwtService,
+    @InjectEntityManager()
+    private readonly entityManager: EntityManager,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
+
     if (!token) {
       throw new UnauthorizedException();
     }
-    try {
-      const payload = await this.jwtService.verifyAsync(token, {
-        secret: process.env.JWT_SECRET_STRING,
-      });
-      request['user'] = payload;
-    } catch {
+    const payload = await this.jwtService.verifyAsync(token, {
+      secret: process.env.JWT_SECRET_STRING,
+    });
+    const user = await this.entityManager.findOneBy(User, {
+      id: payload.sub,
+    });
+    request['user'] = payload;
+    if (user?.is_email_verified) {
+      return true;
+    } else {
       throw new UnauthorizedException();
     }
-    return true;
   }
 
   private extractTokenFromHeader(request: Request): string | undefined {

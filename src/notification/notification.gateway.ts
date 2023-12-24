@@ -4,16 +4,33 @@ import {
   MessageBody,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Server } from 'socket.io';
+import { UseGuards } from '@nestjs/common';
+import { Server, Socket } from 'socket.io';
 import { NotificationService } from './notification.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { UpdateNotificationDto } from './dto/update-notification.dto';
+import { AuthGuard, TokenDataModel } from '../utility/auth.guard';
 
 @WebSocketGateway()
 export class NotificationGateway {
-  // constructor(private readonly notificationService: NotificationService) {}
+  //constructor(
+    // private readonly notificationService: NotificationService
+    // private readonly userConnections = new Map<string, Socket>(),
+  //) {}
 
   @WebSocketServer() server: Server;
+  private readonly userConnections = new Map<string, Socket>();
+
+  // @UseGuards(AuthGuard)
+  handleConnection(client: Socket) {
+    // AuthGuard.canActivate
+    const userId = client.handshake.headers.authorization as string;
+    this.userConnections.set(userId, client);
+  }
+
+  // sendMessageToClients(userIds: [number], message: string) {
+  //   this.server.to(userId).emit('taskStatusChange', message);
+  // }
 
   sendPeriodicMessage() {
     setInterval(() => {

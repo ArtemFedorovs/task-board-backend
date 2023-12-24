@@ -20,7 +20,7 @@ export class Task {
   @ManyToOne(() => User, (user) => user.created_tasks)
   creator: User;
 
-  @ManyToOne(() => User, (user) => user.assigned_tasks)
+  @ManyToOne(() => User, (user) => user.assigned_tasks, { nullable: true })
   assigned_user: User;
 
   @Column({

@@ -2,6 +2,7 @@ import {
   Controller,
   Put,
   Get,
+  Param,
   Post,
   Body,
   Req,
@@ -10,8 +11,9 @@ import {
 } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { CreateTaskDto } from './dto/create-task.dto';
+import { ChangeTaskStatusDto } from './dto/change-task-status.dto';
 // import { UpdateTaskDto } from './dto/update-task.dto';
-import { AuthGuard, TokenDataModel } from '../users/auth.guard';
+import { AuthGuard, TokenDataModel } from '../utility/auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { Request } from 'express';
 
@@ -37,6 +39,23 @@ export class TaskController {
     }
   }
 
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Post('/:taskId/status')
+  async changeTaskStatus(
+    @Body() changeTaskStatusDto: ChangeTaskStatusDto,
+    @Param('taskId') taskId: string,
+  ) {
+    try {
+      const createdTask = await this.taskService.changeTaskStatus(
+        changeTaskStatusDto,
+        +taskId,
+      );
+      return { message: 'Task status changed successfully', task: createdTask };
+    } catch (error) {
+      return error;
+    }
+  }
   // @Post()
   // create(@Body() createTaskDto: CreateTaskDto) {
   //   return this.taskService.create(createTaskDto);

@@ -17,6 +17,9 @@ export class User {
   @Column({ type: 'text', unique: true })
   user_email: string;
 
+  @Column({ type: 'boolean', default: false })
+  is_email_verified: boolean;
+
   @Column({ type: 'text' })
   password: string;
 
@@ -26,20 +29,23 @@ export class User {
   @Column({ type: 'text', nullable: true })
   surname: string;
 
-  @OneToMany(() => Board, (board) => board.owner)
+  @OneToMany(() => Board, (board) => board.owner, { nullable: true })
   owned_boards: Board[];
 
   @ManyToMany(() => Board)
   @JoinTable()
   boards: Board[];
 
-  @OneToMany(() => Task, (task) => task.assigned_user)
+  @OneToMany(() => Task, (task) => task.assigned_user, { nullable: true })
   assigned_tasks: Task[];
 
-  @OneToMany(() => Task, (task) => task.creator)
+  @OneToMany(() => Task, (task) => task.creator, { nullable: true })
   created_tasks: Task[];
 
-  @ManyToMany(() => Task)
+  @ManyToMany(() => Task, {
+    cascade: true,
+    nullable: true,
+  })
   @JoinTable()
   tracked_tasks: Task[];
 }

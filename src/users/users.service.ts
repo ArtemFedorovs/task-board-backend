@@ -11,6 +11,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Task } from '../task/entities/task.entity';
 import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
+import { MailerService } from '../utility/mailer.service';
 
 @Injectable()
 export class UsersService {
@@ -20,30 +22,92 @@ export class UsersService {
     @InjectRepository(Task)
     private readonly taskRepository: Repository<Task>,
     private readonly jwtService: JwtService,
+    private readonly mailerService: MailerService,
   ) {}
 
+  // async findOneWithUserName(user_email: string) {
+  //   return await this.userRepository.findOneBy({ user_email: user_email });
+  // }
+
   async create(createUserDto: CreateUserDto) {
-    const newUser = this.userRepository.create({
+    const user = await this.userRepository.findOneBy({
+      user_email: createUserDto.email,
+    });
+    if (user) {
+      throw new ConflictException('User already exists');
+    }
+    const rounds = 10;
+    const passwordHash = await bcrypt.hash(createUserDto.password, rounds);
+
+    const userData = this.userRepository.create({
       user_email: createUserDto.email,
       name: createUserDto.name,
       surname: createUserDto.surname,
-      password: createUserDto.password,
+      password: passwordHash,
     });
 
-    return await this.userRepository.save(newUser);
+    const newUser = await this.userRepository.save(userData);
+    await this.mailerService.sendVerificationMail(
+      createUserDto.email,
+      newUser.id,
+    );
+    return newUser;
+  }
+
+  async verifyEmail(userId: string) {
+    const user = await this.userRepository.findOneBy({
+      id: +userId,
+    });
+    if (user) {
+      user.is_email_verified = true;
+      await this.userRepository.save(user);
+    } else {
+      throw new NotFoundException('User or task not found');
+    }
   }
 
   async login(loginUserDto: LoginUserDto) {
-    // To do: hash password in DB
     const user = await this.userRepository.findOneBy({
       user_email: loginUserDto.email,
     });
-    if (user.password === loginUserDto.password) {
-      const access_token = await this.jwtService.signAsync({ sub: user.id });
-      return { isLoginSuccessfull: true, token: access_token };
+    const isMatch = await bcrypt.compare(loginUserDto.password, user.password);
+    if (isMatch) {
+      const accessToken = await this.jwtService.signAsync(
+        { type: 'access_token', sub: user.id },
+        { expiresIn: '15m' },
+      );
+      const refreshToken = await this.jwtService.signAsync(
+        { type: 'refresh_token', sub: user.id },
+        { expiresIn: '30d' },
+      );
+      return {
+        isLoginSuccessfull: true,
+        access_token: accessToken,
+        refreshToken: refreshToken,
+      };
     } else {
       return { isLoginSuccessfull: false };
     }
+  }
+
+  async refreshToken(refreshToken: string) {
+    const payload = await this.jwtService.verifyAsync(refreshToken, {
+      secret: process.env.JWT_SECRET_STRING,
+    });
+    const userId = payload.sub;
+    const newAccessToken = await this.jwtService.signAsync(
+      { type: 'access_token', sub: userId },
+      { expiresIn: '15m' },
+    );
+    const newRefreshToken = await this.jwtService.signAsync(
+      { type: 'refresh_token', sub: userId },
+      { expiresIn: '30d' },
+    );
+    return {
+      isLoginSuccessfull: true,
+      access_token: newAccessToken,
+      refreshToken: newRefreshToken,
+    };
   }
 
   async getUserProfile(id: number) {
@@ -94,11 +158,15 @@ export class UsersService {
     if (!task || !user) {
       throw new NotFoundException('User or task not found');
     }
-    const subscription = user.tracked_tasks.find((task) => task.id === taskId);
+    const subscription = user.tracked_tasks?.find((task) => task.id === taskId);
     if (subscription) {
       throw new ConflictException('Subscription already exists');
     } else {
-      user.tracked_tasks.push(task);
+      if (user.tracked_tasks) {
+        user.tracked_tasks.push(task);
+      } else {
+        user.tracked_tasks = [task];
+      }
       await this.userRepository.save(user);
     }
   }
