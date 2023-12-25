@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { ChangeTaskStatusDto } from './dto/change-task-status.dto';
 // import { UpdateTaskDto } from './dto/update-task.dto';
@@ -8,6 +8,7 @@ import { Board } from '../board/entities/board.entity';
 import { User } from '../users/entities/user.entity';
 import { Repository } from 'typeorm';
 import { Status } from './constants';
+import { NotificationGateway } from '../notification/notification.gateway';
 
 @Injectable()
 export class TaskService {
@@ -18,6 +19,8 @@ export class TaskService {
     private readonly boardRepository: Repository<Board>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @Inject(NotificationGateway)
+    private readonly notificationGateway: NotificationGateway,
   ) {}
 
   async create(createTaskDto: CreateTaskDto, creatorId: number) {
@@ -47,29 +50,23 @@ export class TaskService {
     changeTaskStatusDto: ChangeTaskStatusDto,
     taskId: number,
   ) {
-    const task = await this.taskRepository.findOneBy({
-      id: taskId,
+    const task = await this.taskRepository.findOne({
+      where: {
+        id: taskId,
+      },
+      relations: {
+        followers: true,
+      },
     });
     if (!task) {
       throw new NotFoundException('Task not found');
     }
+    this.notificationGateway.sendMessageToClients(
+      task.followers.map((user) => user.id),
+      'notification',
+      `Status of task "${task.title}" was changed to "${task.status}"`,
+    );
     task.status = changeTaskStatusDto.status;
     return await this.taskRepository.save(task);
   }
-
-  // findAll() {
-  //   return `This action returns all task`;
-  // }
-
-  // findOne(id: number) {
-  //   return `This action returns a #${id} task`;
-  // }
-
-  // update(id: number, updateTaskDto: UpdateTaskDto) {
-  //   return `This action updates a #${id} task`;
-  // }
-
-  // remove(id: number) {
-  //   return `This action removes a #${id} task`;
-  // }
 }

@@ -41,11 +41,4 @@ export class User {
 
   @OneToMany(() => Task, (task) => task.creator, { nullable: true })
   created_tasks: Task[];
-
-  @ManyToMany(() => Task, {
-    cascade: true,
-    nullable: true,
-  })
-  @JoinTable()
-  tracked_tasks: Task[];
 }

@@ -1,7 +1,7 @@
 import {
   Controller,
   Put,
-  Get,
+  Inject,
   Param,
   Post,
   Body,
@@ -38,6 +38,14 @@ export class TaskController {
       return error;
     }
   }
+
+  // @ApiBearerAuth()
+  // @UseGuards(AuthGuard)
+  // @Post('tasks/:taskId/assign')
+  // async changeTaskStatus(
+  //   @Body() changeTaskStatusDto: ChangeTaskStatusDto,
+  //   @Param('taskId') taskId: string,
+  // ) {} 
 
   @ApiBearerAuth()
   @UseGuards(AuthGuard)

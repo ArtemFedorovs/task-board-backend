@@ -184,16 +184,19 @@ export class UsersService {
     if (!task || !user) {
       throw new NotFoundException('User or task not found');
     }
-    const subscription = user.tracked_tasks?.find((task) => task.id === taskId);
+    const subscription = task.followers?.find(
+      (follower) => follower.id === userId,
+    );
+    // const subscription = user.tracked_tasks?.find((task) => task.id === taskId);
     if (subscription) {
       throw new ConflictException('Subscription already exists');
     } else {
-      if (user.tracked_tasks) {
-        user.tracked_tasks.push(task);
+      if (task.followers) {
+        task.followers.push(user);
       } else {
-        user.tracked_tasks = [task];
+        task.followers = [user];
       }
-      await this.userRepository.save(user);
+      await this.taskRepository.save(task);
     }
   }
 

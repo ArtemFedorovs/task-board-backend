@@ -7,6 +7,8 @@ import { User } from '../users/entities/user.entity';
 import { Board } from '../board/entities/board.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtСonfig } from '../config/jwt-config';
+import { NotificationGateway } from '../notification/notification.gateway';
+import { AuthGuard } from '../utility/auth.guard';
 
 @Module({
   imports: [
@@ -16,6 +18,6 @@ import { jwtСonfig } from '../config/jwt-config';
     }),
   ],
   controllers: [TaskController],
-  providers: [TaskService],
+  providers: [TaskService, NotificationGateway, AuthGuard],
 })
 export class TaskModule {}

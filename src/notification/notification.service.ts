@@ -7,9 +7,10 @@ import { NotificationGateway } from './notification.gateway';
 export class NotificationService {
   constructor(private readonly webSocketGateway: NotificationGateway) {}
 
-  startSendingMessages() {
-    this.webSocketGateway.sendPeriodicMessage();
-  }
+  // startSendingMessages() {
+  //   this.webSocketGateway.sendPeriodicMessage();
+  // }
+
   // create(createNotificationDto: CreateNotificationDto) {
   //   return 'This action adds a new notification';
   // }

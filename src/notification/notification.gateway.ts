@@ -1,83 +1,49 @@
-import {
-  WebSocketGateway,
-  SubscribeMessage,
-  MessageBody,
-  WebSocketServer,
-} from '@nestjs/websockets';
-import { UseGuards } from '@nestjs/common';
+import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { NotificationService } from './notification.service';
-import { CreateNotificationDto } from './dto/create-notification.dto';
-import { UpdateNotificationDto } from './dto/update-notification.dto';
-import { AuthGuard, TokenDataModel } from '../utility/auth.guard';
+import { AuthGuard } from '../utility/auth.guard';
 
 @WebSocketGateway()
 export class NotificationGateway {
-  //constructor(
-    // private readonly notificationService: NotificationService
-    // private readonly userConnections = new Map<string, Socket>(),
-  //) {}
+  constructor(private readonly authGuard: AuthGuard) {}
 
   @WebSocketServer() server: Server;
-  private readonly userConnections = new Map<string, Socket>();
+  private readonly userConnections = new Map<number, Socket>();
 
-  // @UseGuards(AuthGuard)
-  handleConnection(client: Socket) {
-    // AuthGuard.canActivate
-    const userId = client.handshake.headers.authorization as string;
-    this.userConnections.set(userId, client);
+  async handleConnection(client: Socket) {
+    try {
+      const payload = await this.authGuard.verifyToken(
+        client.handshake.headers.authorization,
+      );
+      this.userConnections.set(+payload.sub, client);
+    } catch {
+      client.disconnect();
+    }
   }
 
-  // sendMessageToClients(userIds: [number], message: string) {
-  //   this.server.to(userId).emit('taskStatusChange', message);
-  // }
-
-  sendPeriodicMessage() {
-    setInterval(() => {
-      this.server.emit('message', 'Hello from server!');
-    }, 1000);
+  handleDisconnect(client: any) {
+    for (const [key, value] of this.userConnections.entries()) {
+      if (value === client) {
+        this.userConnections.delete(key);
+        break;
+      }
+    }
   }
 
-  @SubscribeMessage('events')
-  handleEvent(@MessageBody() data: string): string {
-    setInterval(() => {
-      this.server.emit('message', 'Hello from server!');
-    }, 5000);
-    return data;
+  sendMessageToClient(clientId: number, event: string, message: string) {
+    const client = this.userConnections.get(clientId);
+    console.log(`Sending message to ${clientId}: ${message}`);
+    if (client) {
+      client.emit(event, message);
+    }
   }
 
-  @SubscribeMessage('message')
-  handleMessage(@MessageBody() data: string): void {
-    this.server.emit('message', data);
+  sendMessageToClients(
+    clientIds: number[],
+    event: string,
+    message: string,
+  ): void {
+    for (const clientId of clientIds) {
+      this.sendMessageToClient(clientId, event, message);
+    }
   }
-
-  // @SubscribeMessage('events')
-  // handleEvent(@MessageBody() data: string): string {
-  //   return data;
-  // }
-
-  // @SubscribeMessage('createNotification')
-  // create(@MessageBody() createNotificationDto: CreateNotificationDto) {
-  //   return this.notificationService.create(createNotificationDto);
-  // }
-
-  // @SubscribeMessage('findAllNotification')
-  // findAll() {
-  //   return this.notificationService.findAll();
-  // }
-
-  // @SubscribeMessage('findOneNotification')
-  // findOne(@MessageBody() id: number) {
-  //   return this.notificationService.findOne(id);
-  // }
-
-  // @SubscribeMessage('updateNotification')
-  // update(@MessageBody() updateNotificationDto: UpdateNotificationDto) {
-  //   return this.notificationService.update(updateNotificationDto.id, updateNotificationDto);
-  // }
-
-  // @SubscribeMessage('removeNotification')
-  // remove(@MessageBody() id: number) {
-  //   return this.notificationService.remove(id);
-  // }
 }

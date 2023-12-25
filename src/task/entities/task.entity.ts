@@ -1,4 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  ManyToMany,
+  JoinTable,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Board } from '../../board/entities/board.entity';
 import { Status } from '../constants';
@@ -32,4 +39,10 @@ export class Task {
 
   @Column({ type: 'date', nullable: true })
   expired_at: Date;
+
+  @ManyToMany(() => User, {
+    nullable: true,
+  })
+  @JoinTable()
+  followers: User[];
 }
