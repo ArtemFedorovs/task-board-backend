@@ -13,7 +13,6 @@ import { User } from '../users/entities/user.entity';
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
-    // private readonly authService: AuthService,
     private jwtService: JwtService,
     @InjectEntityManager()
     private readonly entityManager: EntityManager,
@@ -23,7 +22,7 @@ export class AuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
     const payload = await this.verifyToken(token);
-    request['user'] = payload;
+    request.headers.userId = payload.sub;
     return true;
   }
 
@@ -50,11 +49,3 @@ export class AuthGuard implements CanActivate {
     return type === 'Bearer' ? token : undefined;
   }
 }
-
-export type TokenDataModel = {
-  user: {
-    sub: number;
-    iat: number;
-    exp: number;
-  };
-};

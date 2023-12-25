@@ -7,11 +7,11 @@ import { Task } from '../task/entities/task.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule } from '@nestjs/config';
 import { jwtСonfig } from '../config/jwt-config';
-import { MailerModule } from '../utility/mailer.module';
+import { MailerService } from '../utility/mailer.service';
+import { AuthGuard } from '../utility/auth.guard';
 
 @Module({
   imports: [
-    MailerModule,
     ConfigModule.forRoot(),
     TypeOrmModule.forFeature([User, Task]),
     JwtModule.registerAsync({
@@ -20,6 +20,6 @@ import { MailerModule } from '../utility/mailer.module';
     }),
   ],
   controllers: [UsersController],
-  providers: [UsersService],
+  providers: [UsersService, MailerService, AuthGuard],
 })
 export class UsersModule {}

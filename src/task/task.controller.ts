@@ -5,18 +5,18 @@ import {
   Param,
   Post,
   Body,
-  Req,
+  Headers,
   UseGuards,
   Delete,
+  HttpException,
 } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
 import { UpdateTaskDetailsDto } from './dto/update-task-details.dto';
 import { AssingTaskForUserDto } from './dto/assing-task-for-user.dto';
-import { AuthGuard, TokenDataModel } from '../utility/auth.guard';
+import { AuthGuard } from '../utility/auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { Request } from 'express';
 
 @Controller('task')
 export class TaskController {
@@ -27,14 +27,14 @@ export class TaskController {
   @Post('/boards/:boardId/tasks')
   async createTask(
     @Body() createTaskDto: CreateTaskDto,
-    @Req() request: Request<CreateTaskDto> & TokenDataModel,
+    @Headers('userId') userId: string,
     @Param('boardId') boardId: string,
   ) {
     try {
-      await this.taskService.create(boardId, createTaskDto, request.user.sub);
+      await this.taskService.create(boardId, createTaskDto, +userId);
       return { message: 'Task created successfully' };
     } catch (error) {
-      return error;
+      throw new HttpException(error.response, error.status);
     }
   }
 
@@ -46,7 +46,7 @@ export class TaskController {
       const task = await this.taskService.getTaskById(taskId);
       return task;
     } catch (error) {
-      return error;
+      throw new HttpException(error.response, error.status);
     }
   }
 
@@ -58,7 +58,7 @@ export class TaskController {
       const tasks = await this.taskService.getTasksByBoardId(boardId);
       return tasks;
     } catch (error) {
-      return error;
+      throw new HttpException(error.response, error.status);
     }
   }
 
@@ -70,7 +70,7 @@ export class TaskController {
       await this.taskService.deleteTaskById(taskId);
       return { message: 'Task deleted successfully' };
     } catch (error) {
-      return error;
+      throw new HttpException(error.response, error.status);
     }
   }
 
@@ -85,7 +85,7 @@ export class TaskController {
       await this.taskService.updateTaskStatus(updateTaskStatusDto, +taskId);
       return { message: 'Task status updated successfully' };
     } catch (error) {
-      return error;
+      throw new HttpException(error.response, error.status);
     }
   }
 
@@ -100,7 +100,7 @@ export class TaskController {
       await this.taskService.updateTaskDetails(updateTaskDetailsDto, +taskId);
       return { message: 'Task updated successfully' };
     } catch (error) {
-      return error;
+      throw new HttpException(error.response, error.status);
     }
   }
 
@@ -118,7 +118,7 @@ export class TaskController {
       );
       return { message: 'Task updated successfully' };
     } catch (error) {
-      return error;
+      throw new HttpException(error.response, error.status);
     }
-  } 
+  }
 }

@@ -1,11 +1,14 @@
 import {
   Controller,
   Get,
+  Put,
   Post,
   Body,
   UseGuards,
-  Req,
+  Headers,
   Param,
+  HttpException,
+  HttpCode,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -13,9 +16,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { RefreshTokenDto } from './dto/refresh-user.dto';
 import { ResetPasswordRequestDto } from './dto/reset-password-request-dto';
-import { AuthGuard, TokenDataModel } from '../utility/auth.guard';
+import { AuthGuard } from '../utility/auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { Request } from 'express';
 
 @Controller('users')
 export class UsersController {
@@ -25,34 +27,35 @@ export class UsersController {
   async createUser(@Body() createUserDto: CreateUserDto) {
     try {
       const createdUser = await this.usersService.create(createUserDto);
-      return { message: 'User created successfully', user: createdUser };
+      return { message: 'User registered successfully', user: createdUser };
     } catch (error) {
-      return error;
+      throw new HttpException(error.response, error.status);
     }
   }
 
   @Get('/verification/:token')
   async verifyEmail(@Param('token') token: string) {
-    console.log(1)
     try {
       await this.usersService.verifyEmail(token);
-      return 'Successfully verified';
+      return { message: 'Email verified successfully' };
     } catch (error) {
-      return error;
+      throw new HttpException(error.response, error.status);
     }
   }
 
   @Post('/login')
+  @HttpCode(200)
   async login(@Body() loginUserDto: LoginUserDto) {
     try {
       const response = await this.usersService.login(loginUserDto);
       return response;
     } catch (error) {
-      return error;
+      throw new HttpException(error.response, error.status);
     }
   }
 
   @Post('/refresh-token')
+  @HttpCode(200)
   async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
     try {
       const response = await this.usersService.refreshToken(
@@ -60,100 +63,95 @@ export class UsersController {
       );
       return response;
     } catch (error) {
-      return error;
+      throw new HttpException(error.response, error.status);
     }
   }
 
   @Post('/reset-password/request')
+  @HttpCode(200)
   async resetPasswordRequest(
     @Body() resetPasswordRequestDto: ResetPasswordRequestDto,
   ) {
     try {
-      const response = await this.usersService.resetPasswordRequest(
+      await this.usersService.resetPasswordRequest(
         resetPasswordRequestDto.email,
         resetPasswordRequestDto.newPassword,
       );
-      return response;
+      return { message: 'Password reset email sent successfully' };
     } catch (error) {
-      return error;
+      throw new HttpException(error.response, error.status);
     }
   }
 
   @Get('/reset-password/:token')
   async resetPassword(@Param('token') token: string) {
     try {
-      const response = await this.usersService.resetPassword(token);
-      return response;
+      await this.usersService.resetPassword(token);
+      return { message: 'Password reset successfully' };
     } catch (error) {
-      return error;
+      throw new HttpException(error.response, error.status);
     }
   }
 
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @Get('/profile')
-  async getUserProfile(@Req() request: TokenDataModel) {
+  async getUserProfile(@Headers('userId') userId: string) {
     try {
-      const userProfile = await this.usersService.getUserProfile(
-        request.user.sub,
-      );
+      const userProfile = await this.usersService.getUserProfile(+userId);
       return userProfile;
     } catch (error) {
-      return error;
+      throw new HttpException(error.response, error.status);
     }
   }
 
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
-  @Post('/profile')
+  @Put('/profile')
   async updateUserProfile(
-    @Req() request: Request<UpdateUserDto> & TokenDataModel,
+    @Headers('userId') userId: string,
     @Body() updateUserDto: UpdateUserDto,
   ) {
     try {
       const updateUser = await this.usersService.updateUserProfile(
-        request.user.sub,
+        +userId,
         updateUserDto,
       );
       return updateUser;
     } catch (error) {
-      return error;
+      throw new HttpException(error.response, error.status);
     }
   }
 
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @Post('/subscribe/:taskId')
+  @HttpCode(200)
   async subscribeToTaskStatusChanges(
-    @Req() request: Request<UpdateUserDto> & TokenDataModel,
+    @Headers('userId') userId: string,
     @Param('taskId') taskId: string,
   ) {
     try {
-      await this.usersService.subscribeToTaskStatusChanges(
-        request.user.sub,
-        +taskId,
-      );
+      await this.usersService.subscribeToTaskStatusChanges(+userId, +taskId);
       return { message: 'Successfully subscribed' };
     } catch (error) {
-      return error;
+      throw new HttpException(error.response, error.status);
     }
   }
 
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @Post('/unsubscribe/:taskId')
+  @HttpCode(200)
   async unSubscribeToTaskStatusChanges(
-    @Req() request: Request<UpdateUserDto> & TokenDataModel,
+    @Headers('userId') userId: string,
     @Param('taskId') taskId: string,
   ) {
     try {
-      await this.usersService.unSubscribeToTaskStatusChanges(
-        request.user.sub,
-        +taskId,
-      );
+      await this.usersService.unSubscribeToTaskStatusChanges(+userId, +taskId);
       return { message: 'Successfully unsubscribed' };
     } catch (error) {
-      return error;
+      throw new HttpException(error.response, error.status);
     }
   }
 }

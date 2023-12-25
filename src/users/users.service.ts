@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -67,6 +68,9 @@ export class UsersService {
     const user = await this.userRepository.findOneBy({
       user_email: loginUserDto.email,
     });
+    if (!user) {
+      throw new UnauthorizedException('Wrong login or password');
+    }
     const isMatch = await bcrypt.compare(loginUserDto.password, user.password);
     if (isMatch) {
       const accessToken = await this.jwtService.signAsync(
@@ -83,7 +87,7 @@ export class UsersService {
         refreshToken: refreshToken,
       };
     } else {
-      return { isLoginSuccessfull: false };
+      throw new UnauthorizedException('Wrong login or password');
     }
   }
 
@@ -108,40 +112,43 @@ export class UsersService {
   }
 
   async resetPasswordRequest(email: string, newPassword: string) {
-    const resetPasswordToken = await this.jwtService.signAsync({
-      type: 'reset_password_token',
-      sub: { email: email, newPassword: newPassword },
-    });
-    await this.mailerService.sendResetPasswordMail(
-      email,
-      encodeURIComponent(resetPasswordToken),
-    );
-    return {
-      isResetPasswordEmailSend: true,
-    };
+    try {
+      const resetPasswordToken = await this.jwtService.signAsync({
+        type: 'reset_password_token',
+        sub: { email: email, newPassword: newPassword },
+      });
+      await this.mailerService.sendResetPasswordMail(
+        email,
+        encodeURIComponent(resetPasswordToken),
+      );
+      return {
+        isResetPasswordEmailSend: true,
+      };
+    } catch {
+      throw new NotFoundException('User not found');
+    }
   }
 
   async resetPassword(token: string) {
-    const payload = await this.jwtService.verifyAsync(
-      decodeURIComponent(token),
-      { secret: process.env.JWT_SECRET_STRING },
-    );
-    const user = await this.userRepository.findOneBy({
-      user_email: payload.sub.email,
-    });
-    user.password = await bcrypt.hash(payload.sub.newPassword, 10);
-    await this.userRepository.save(user);
-
-    return {
-      isPasswordReseted: true,
-    };
+    try {
+      const payload = await this.jwtService.verifyAsync(
+        decodeURIComponent(token),
+        { secret: process.env.JWT_SECRET_STRING },
+      );
+      const user = await this.userRepository.findOneBy({
+        user_email: payload.sub.email,
+      });
+      user.password = await bcrypt.hash(payload.sub.newPassword, 10);
+      await this.userRepository.save(user);
+    } catch {
+      throw new UnauthorizedException('Wrong token');
+    }
   }
 
   async getUserProfile(id: number) {
     const user = await this.userRepository.findOneBy({
       id: id,
     });
-
     if (!user) {
       throw new NotFoundException('User not found');
     } else {
