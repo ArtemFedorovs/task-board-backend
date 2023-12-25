@@ -175,8 +175,13 @@ export class UsersService {
   }
 
   async subscribeToTaskStatusChanges(userId: number, taskId: number) {
-    const task = await this.taskRepository.findOneBy({
-      id: taskId,
+    const task = await this.taskRepository.findOne({
+      where: {
+        id: taskId,
+      },
+      relations: {
+        followers: true,
+      },
     });
     const user = await this.userRepository.findOneBy({
       id: userId,
@@ -184,23 +189,42 @@ export class UsersService {
     if (!task || !user) {
       throw new NotFoundException('User or task not found');
     }
+
     const subscription = task.followers?.find(
       (follower) => follower.id === userId,
     );
-    // const subscription = user.tracked_tasks?.find((task) => task.id === taskId);
     if (subscription) {
       throw new ConflictException('Subscription already exists');
-    } else {
-      if (task.followers) {
-        task.followers.push(user);
-      } else {
-        task.followers = [user];
-      }
-      await this.taskRepository.save(task);
     }
+
+    task.followers.push(user);
+    await this.taskRepository.save(task);
   }
 
-  // async unSubscribeToTaskStatusChanges() {
+  async unSubscribeToTaskStatusChanges(userId: number, taskId: number) {
+    const task = await this.taskRepository.findOne({
+      where: {
+        id: taskId,
+      },
+      relations: {
+        followers: true,
+      },
+    });
+    const user = await this.userRepository.findOneBy({
+      id: userId,
+    });
+    if (!task || !user) {
+      throw new NotFoundException('User or task not found');
+    }
 
-  // }
+    const subscriptionIndex = task.followers?.findIndex(
+      (follower) => follower.id === userId,
+    );
+    if (subscriptionIndex === -1) {
+      throw new NotFoundException('Subscription not found');
+    }
+
+    task.followers.splice(subscriptionIndex, 1);
+    await this.taskRepository.save(task);
+  }
 }

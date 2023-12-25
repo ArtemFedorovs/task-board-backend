@@ -142,15 +142,18 @@ export class UsersController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @Post('/unsubscribe/:taskId')
-  async unSubscribeToTaskStatusChanges(@Param('taskId') taskId: string) {
-    // try {
-    //   const updateUser = await this.usersService.unSubscribeToTaskStatusChanges(
-    //     request.user.sub,
-    //     updateUserDto,
-    //   );
-    //   return updateUser;
-    // } catch (error) {
-    //   return error;
-    // }
+  async unSubscribeToTaskStatusChanges(
+    @Req() request: Request<UpdateUserDto> & TokenDataModel,
+    @Param('taskId') taskId: string,
+  ) {
+    try {
+      await this.usersService.unSubscribeToTaskStatusChanges(
+        request.user.sub,
+        +taskId,
+      );
+      return { message: 'Successfully unsubscribed' };
+    } catch (error) {
+      return error;
+    }
   }
 }
