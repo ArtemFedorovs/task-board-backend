@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Body,
-  Put,
   UseGuards,
   Req,
   Param,
@@ -22,7 +21,7 @@ import { Request } from 'express';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Put('/create')
+  @Post('/create')
   async createUser(@Body() createUserDto: CreateUserDto) {
     try {
       const createdUser = await this.usersService.create(createUserDto);
@@ -32,10 +31,11 @@ export class UsersController {
     }
   }
 
-  @Get('/verification/:userId')
-  async verifyEmail(@Param('userId') userId: string) {
+  @Get('/verification/:token')
+  async verifyEmail(@Param('token') token: string) {
+    console.log(1)
     try {
-      await this.usersService.verifyEmail(userId);
+      await this.usersService.verifyEmail(token);
       return 'Successfully verified';
     } catch (error) {
       return error;

@@ -25,10 +25,6 @@ export class UsersService {
     private readonly mailerService: MailerService,
   ) {}
 
-  // async findOneWithUserName(user_email: string) {
-  //   return await this.userRepository.findOneBy({ user_email: user_email });
-  // }
-
   async create(createUserDto: CreateUserDto) {
     const user = await this.userRepository.findOneBy({
       user_email: createUserDto.email,
@@ -38,25 +34,26 @@ export class UsersService {
     }
 
     const passwordHash = await bcrypt.hash(createUserDto.password, 10);
-
+    const verification_token = await bcrypt.hash(createUserDto.email, 10);
     const userData = this.userRepository.create({
       user_email: createUserDto.email,
       name: createUserDto.name,
       surname: createUserDto.surname,
       password: passwordHash,
+      verification_token: verification_token,
     });
 
     const newUser = await this.userRepository.save(userData);
     await this.mailerService.sendVerificationMail(
       createUserDto.email,
-      newUser.id,
+      encodeURIComponent(verification_token),
     );
     return newUser;
   }
 
-  async verifyEmail(userId: string) {
+  async verifyEmail(token: string) {
     const user = await this.userRepository.findOneBy({
-      id: +userId,
+      verification_token: decodeURIComponent(token),
     });
     if (user) {
       user.is_email_verified = true;
@@ -115,16 +112,20 @@ export class UsersService {
       type: 'reset_password_token',
       sub: { email: email, newPassword: newPassword },
     });
-    await this.mailerService.sendResetPasswordMail(email, resetPasswordToken);
+    await this.mailerService.sendResetPasswordMail(
+      email,
+      encodeURIComponent(resetPasswordToken),
+    );
     return {
       isResetPasswordEmailSend: true,
     };
   }
 
   async resetPassword(token: string) {
-    const payload = await this.jwtService.verifyAsync(token, {
-      secret: process.env.JWT_SECRET_STRING,
-    });
+    const payload = await this.jwtService.verifyAsync(
+      decodeURIComponent(token),
+      { secret: process.env.JWT_SECRET_STRING },
+    );
     const user = await this.userRepository.findOneBy({
       user_email: payload.sub.email,
     });

@@ -23,11 +23,11 @@ export class MailerService {
     );
   }
 
-  async sendVerificationMail(to: string, userId: number): Promise<void> {
+  async sendVerificationMail(to: string, token: string): Promise<void> {
     const mailOptions = {
       to: `${to}`,
       subject: 'Email verification',
-      text: `Please verify your account here: ${process.env.APP_HOST}/user/verification/${userId}`,
+      text: `Please verify your account here: ${process.env.APP_HOST}/users/verification/${token}`,
     };
     await this.transporter.sendMail(mailOptions);
   }
@@ -36,7 +36,7 @@ export class MailerService {
     const mailOptions = {
       to: `${to}`,
       subject: 'Email verification',
-      text: `Please reset your password here: ${process.env.APP_HOST}/reset-password/${token}`,
+      text: `Please reset your password here: ${process.env.APP_HOST}/users/reset-password/${token}`,
     };
     await this.transporter.sendMail(mailOptions);
   }

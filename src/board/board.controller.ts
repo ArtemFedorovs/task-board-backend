@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, UseGuards, Put, Param, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+  Put,
+  Param,
+  Req,
+} from '@nestjs/common';
 import { BoardService } from './board.service';
 import { CreateBoardDto } from './dto/create-board.dto';
 import { UpdateBoardDto } from './dto/update-board.dto';
@@ -12,7 +21,7 @@ export class BoardController {
 
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
-  @Put()
+  @Post()
   async createBoard(
     @Body() createBoardDto: CreateBoardDto,
     @Req() request: Request<CreateBoardDto> & TokenDataModel,
@@ -27,30 +36,4 @@ export class BoardController {
       return error;
     }
   }
-
-
-  // @Post()
-  // create(@Body() createBoardDto: CreateBoardDto) {
-  //   return this.boardService.create(createBoardDto);
-  // }
-
-  // @Get()
-  // findAll() {
-  //   return this.boardService.findAll();
-  // }
-
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.boardService.findOne(+id);
-  // }
-
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateBoardDto: UpdateBoardDto) {
-  //   return this.boardService.update(+id, updateBoardDto);
-  // }
-
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.boardService.remove(+id);
-  // }
 }

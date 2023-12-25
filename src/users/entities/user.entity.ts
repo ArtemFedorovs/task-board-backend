@@ -20,6 +20,9 @@ export class User {
   @Column({ type: 'boolean', default: false })
   is_email_verified: boolean;
 
+  @Column({ type: 'text', nullable: true })
+  verification_token: string;
+
   @Column({ type: 'text' })
   password: string;
 

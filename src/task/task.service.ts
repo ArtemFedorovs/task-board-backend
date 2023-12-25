@@ -1,7 +1,12 @@
-import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+  Inject,
+} from '@nestjs/common';
 import { CreateTaskDto } from './dto/create-task.dto';
-import { ChangeTaskStatusDto } from './dto/change-task-status.dto';
-// import { UpdateTaskDto } from './dto/update-task.dto';
+import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
+import { UpdateTaskDetailsDto } from './dto/update-task-details.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Task } from './entities/task.entity';
 import { Board } from '../board/entities/board.entity';
@@ -23,9 +28,9 @@ export class TaskService {
     private readonly notificationGateway: NotificationGateway,
   ) {}
 
-  async create(createTaskDto: CreateTaskDto, creatorId: number) {
+  async create(boardId, createTaskDto: CreateTaskDto, creatorId: number) {
     const board = await this.boardRepository.findOneBy({
-      id: createTaskDto.boardId,
+      id: boardId,
     });
     if (!board) {
       throw new NotFoundException('Board not found');
@@ -46,8 +51,82 @@ export class TaskService {
     return await this.taskRepository.save(newTask);
   }
 
-  async changeTaskStatus(
-    changeTaskStatusDto: ChangeTaskStatusDto,
+  async getTasksByBoardId(boardId: string) {
+    const board = await this.boardRepository.findOne({
+      where: {
+        id: +boardId,
+      },
+    });
+    if (!board) {
+      throw new NotFoundException('Board not found');
+    }
+
+    const tasks = await this.taskRepository.find({
+      where: {
+        board: board,
+      },
+      relations: {
+        assigned_user: true,
+      },
+    });
+    if (!tasks) {
+      throw new InternalServerErrorException();
+    }
+
+    return tasks;
+  }
+
+  async getTaskById(taskId: string) {
+    const task = await this.taskRepository.findOne({
+      where: {
+        id: +taskId,
+      },
+      relations: {
+        assigned_user: true,
+      },
+    });
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+    return task;
+  }
+
+  async deleteTaskById(taskId: string) {
+    let task = await this.taskRepository.findOne({
+      where: {
+        id: +taskId,
+      },
+      relations: {
+        assigned_user: true,
+        followers: true,
+        creator: true,
+        board: true,
+      },
+    });
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
+    try {
+      task.assigned_user = null;
+      task.creator = null;
+      task.board = null;
+      task.followers = [];
+      await this.taskRepository.save(task);
+
+      task = await this.taskRepository.findOne({
+        where: {
+          id: +taskId,
+        },
+      });
+      await this.taskRepository.delete(task);
+    } catch {
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async updateTaskStatus(
+    updateTaskStatusDto: UpdateTaskStatusDto,
     taskId: number,
   ) {
     const task = await this.taskRepository.findOne({
@@ -66,7 +145,76 @@ export class TaskService {
       'notification',
       `Status of task "${task.title}" was changed to "${task.status}"`,
     );
-    task.status = changeTaskStatusDto.status;
+    task.status = updateTaskStatusDto.status;
     return await this.taskRepository.save(task);
+  }
+
+  async updateTaskDetails(
+    updateTaskDetailsDto: UpdateTaskDetailsDto,
+    taskId: number,
+  ) {
+    const task = await this.taskRepository.findOne({
+      where: {
+        id: taskId,
+      },
+      relations: {
+        assigned_user: true,
+        followers: true,
+      },
+    });
+
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
+    task.title = updateTaskDetailsDto.title || task.title;
+    task.description = updateTaskDetailsDto.description || task.description;
+
+    if (updateTaskDetailsDto.assigned_user_id) {
+      const assigned_user = await this.userRepository.findOneBy({
+        id: updateTaskDetailsDto.assigned_user_id,
+      });
+      if (!assigned_user) {
+        throw new NotFoundException('User not found');
+      }
+      task.assigned_user = assigned_user;
+    }
+
+    if (updateTaskDetailsDto.status) {
+      task.status = updateTaskDetailsDto.status || task.status;
+      try {
+        this.notificationGateway.sendMessageToClients(
+          task.followers.map((user) => user.id),
+          'notification',
+          `Status of task "${task.title}" was changed to "${task.status}"`,
+        );
+      } catch {
+        throw new InternalServerErrorException();
+      }
+    }
+
+    await this.taskRepository.save(task);
+  }
+
+  async assingTaskForUser(taskId: number, assignedToUserId: number) {
+    const task = await this.taskRepository.findOne({
+      where: {
+        id: taskId,
+      },
+      relations: {
+        assigned_user: true,
+      },
+    });
+    const user = await this.userRepository.findOne({
+      where: {
+        id: assignedToUserId,
+      },
+    });
+    if (!task || !user) {
+      throw new NotFoundException('User or task not found');
+    }
+
+    task.assigned_user = user;
+    await this.taskRepository.save(task);
   }
 }

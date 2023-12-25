@@ -1,7 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsDateString, MaxLength, IsOptional } from 'class-validator';
+import { Status } from '../constants';
+import {
+  IsString,
+  MaxLength,
+  IsOptional,
+  IsEnum,
+  IsInt,
+  Min,
+} from 'class-validator';
 
-export class CreateTaskDto {
+export class UpdateTaskDetailsDto {
+  @IsOptional()
   @IsString()
   @MaxLength(100, {
     message: 'Title is too long. Max length is 100 characters.',
@@ -17,7 +26,14 @@ export class CreateTaskDto {
   @ApiProperty()
   description: string;
 
-  @IsDateString()
+  @IsOptional()
+  @IsInt()
+  @Min(0)
   @ApiProperty()
-  expired_at: Date;
+  assigned_user_id: number;
+
+  @IsOptional()
+  @IsEnum(Status)
+  @ApiProperty()
+  status: Status;
 }
