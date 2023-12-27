@@ -5,17 +5,16 @@ import {
   Param,
   Post,
   Body,
-  Headers,
+  Req,
   UseGuards,
   Delete,
-  HttpException,
 } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
 import { UpdateTaskDetailsDto } from './dto/update-task-details.dto';
 import { AssingTaskForUserDto } from './dto/assing-task-for-user.dto';
-import { AuthGuard } from '../utility/auth.guard';
+import { AuthGuard, ProtectedRequest } from '../core/auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('task')
@@ -27,51 +26,33 @@ export class TaskController {
   @Post('/boards/:boardId/tasks')
   async createTask(
     @Body() createTaskDto: CreateTaskDto,
-    @Headers('userId') userId: string,
+    @Req() req: ProtectedRequest,
     @Param('boardId') boardId: string,
   ) {
-    try {
-      await this.taskService.create(boardId, createTaskDto, +userId);
-      return { message: 'Task created successfully' };
-    } catch (error) {
-      throw new HttpException(error.response, error.status);
-    }
+    await this.taskService.create(boardId, createTaskDto, req.headers.userId);
+    return { message: 'Task created successfully' };
   }
 
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @Get('/boards/:boardId/tasks/:taskId')
   async getTaskById(@Param('taskId') taskId: string) {
-    try {
-      const task = await this.taskService.getTaskById(taskId);
-      return task;
-    } catch (error) {
-      throw new HttpException(error.response, error.status);
-    }
+    return await this.taskService.getTaskById(taskId);
   }
 
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @Get('/boards/:boardId/tasks')
   async getTasks(@Param('boardId') boardId: string) {
-    try {
-      const tasks = await this.taskService.getTasksByBoardId(boardId);
-      return tasks;
-    } catch (error) {
-      throw new HttpException(error.response, error.status);
-    }
+    return await this.taskService.getTasksByBoardId(boardId);
   }
 
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @Delete('/boards/:boardId/tasks/:taskId')
   async deleteTaskById(@Param('taskId') taskId: string) {
-    try {
-      await this.taskService.deleteTaskById(taskId);
-      return { message: 'Task deleted successfully' };
-    } catch (error) {
-      throw new HttpException(error.response, error.status);
-    }
+    await this.taskService.deleteTaskById(taskId);
+    return { message: 'Task deleted successfully' };
   }
 
   @ApiBearerAuth()
@@ -81,12 +62,8 @@ export class TaskController {
     @Body() updateTaskStatusDto: UpdateTaskStatusDto,
     @Param('taskId') taskId: string,
   ) {
-    try {
-      await this.taskService.updateTaskStatus(updateTaskStatusDto, +taskId);
-      return { message: 'Task status updated successfully' };
-    } catch (error) {
-      throw new HttpException(error.response, error.status);
-    }
+    await this.taskService.updateTaskStatus(updateTaskStatusDto, +taskId);
+    return { message: 'Task status updated successfully' };
   }
 
   @ApiBearerAuth()
@@ -96,12 +73,8 @@ export class TaskController {
     @Body() updateTaskDetailsDto: UpdateTaskDetailsDto,
     @Param('taskId') taskId: string,
   ) {
-    try {
-      await this.taskService.updateTaskDetails(updateTaskDetailsDto, +taskId);
-      return { message: 'Task updated successfully' };
-    } catch (error) {
-      throw new HttpException(error.response, error.status);
-    }
+    await this.taskService.updateTaskDetails(updateTaskDetailsDto, +taskId);
+    return { message: 'Task updated successfully' };
   }
 
   @ApiBearerAuth()
@@ -111,14 +84,10 @@ export class TaskController {
     @Body() assingTaskForUserDto: AssingTaskForUserDto,
     @Param('taskId') taskId: string,
   ) {
-    try {
-      await this.taskService.assingTaskForUser(
-        +taskId,
-        +assingTaskForUserDto.assignedTo,
-      );
-      return { message: 'Task updated successfully' };
-    } catch (error) {
-      throw new HttpException(error.response, error.status);
-    }
+    await this.taskService.assingTaskForUser(
+      +taskId,
+      +assingTaskForUserDto.assignedTo,
+    );
+    return { message: 'Task updated successfully' };
   }
 }

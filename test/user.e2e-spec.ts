@@ -2,8 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { ValidationPipe } from '@nestjs/common';
-import { MailerService } from '../src/utility/mailer.service';
-import { AuthGuard } from '../src/utility/auth.guard';
+import { MailerService } from '../src/core/mailer.service';
+import { AuthGuard } from '../src/core/auth.guard';
 import { User } from '../src/users/entities/user.entity';
 import { Task } from '../src/task/entities/task.entity';
 import { JwtModule } from '@nestjs/jwt';
@@ -196,8 +196,8 @@ describe('AppController (e2e)', () => {
         .expect(200);
 
       expect(response.body).toMatchObject({
-        name: 'string',
-        surname: 'string',
+        name: 'strfdfing',
+        surname: 'strfdfing',
       });
     });
   });

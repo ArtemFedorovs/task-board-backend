@@ -1,6 +1,6 @@
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { AuthGuard } from '../utility/auth.guard';
+import { AuthGuard } from '../core/auth.guard';
 
 @WebSocketGateway()
 export class NotificationGateway {

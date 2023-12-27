@@ -7,8 +7,8 @@ import { Task } from '../task/entities/task.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule } from '@nestjs/config';
 import { jwtСonfig } from '../config/jwt-config';
-import { MailerService } from '../utility/mailer.service';
-import { AuthGuard } from '../utility/auth.guard';
+import { MailerService } from '../core/mailer.service';
+import { AuthGuard } from '../core/auth.guard';
 
 @Module({
   imports: [

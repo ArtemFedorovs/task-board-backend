@@ -6,12 +6,12 @@ import {
   UseGuards,
   Put,
   HttpException,
-  Headers,
+  Req,
 } from '@nestjs/common';
 import { BoardService } from './board.service';
 import { CreateBoardDto } from './dto/create-board.dto';
 import { UpdateBoardDto } from './dto/update-board.dto';
-import { AuthGuard, TokenDataModel } from '../utility/auth.guard';
+import { AuthGuard, ProtectedRequest } from '../core/auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('board')
@@ -23,12 +23,12 @@ export class BoardController {
   @Post()
   async createBoard(
     @Body() createBoardDto: CreateBoardDto,
-    @Headers('userId') userId: string,
+    @Req() req: ProtectedRequest,
   ) {
     try {
       const createdBoard = await this.boardService.create(
         createBoardDto,
-        +userId,
+        req.headers.userId,
       );
       return { message: 'Board created successfully', board: createdBoard };
     } catch (error) {

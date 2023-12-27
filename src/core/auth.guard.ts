@@ -49,3 +49,7 @@ export class AuthGuard implements CanActivate {
     return type === 'Bearer' ? token : undefined;
   }
 }
+
+export type ProtectedRequest<T = any> = Request<T> & {
+  headers: { userId: number };
+};

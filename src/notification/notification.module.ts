@@ -4,7 +4,7 @@ import { NotificationGateway } from './notification.gateway';
 import { ConfigModule } from '@nestjs/config';
 import { jwtСonfig } from '../config/jwt-config';
 import { JwtModule } from '@nestjs/jwt';
-import { AuthGuard } from '../utility/auth.guard';
+import { AuthGuard } from '../core/auth.guard';
 
 @Module({
   imports: [

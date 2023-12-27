@@ -8,7 +8,7 @@ import { Board } from '../board/entities/board.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtСonfig } from '../config/jwt-config';
 import { NotificationGateway } from '../notification/notification.gateway';
-import { AuthGuard } from '../utility/auth.guard';
+import { AuthGuard } from '../core/auth.guard';
 
 @Module({
   imports: [

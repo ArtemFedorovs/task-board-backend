@@ -13,7 +13,7 @@ import { User } from './entities/user.entity';
 import { Task } from '../task/entities/task.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { MailerService } from '../utility/mailer.service';
+import { MailerService } from '../core/mailer.service';
 
 @Injectable()
 export class UsersService {
@@ -27,6 +27,7 @@ export class UsersService {
   ) {}
 
   async create(createUserDto: CreateUserDto) {
+        // try {
     const user = await this.userRepository.findOneBy({
       user_email: createUserDto.email,
     });
@@ -50,6 +51,9 @@ export class UsersService {
       encodeURIComponent(verification_token),
     );
     return newUser;
+        // } catch (error) {
+    //   return error;
+    // } 
   }
 
   async verifyEmail(token: string) {
@@ -65,30 +69,34 @@ export class UsersService {
   }
 
   async login(loginUserDto: LoginUserDto) {
-    const user = await this.userRepository.findOneBy({
-      user_email: loginUserDto.email,
-    });
-    if (!user) {
-      throw new UnauthorizedException('Wrong login or password');
-    }
-    const isMatch = await bcrypt.compare(loginUserDto.password, user.password);
-    if (isMatch) {
-      const accessToken = await this.jwtService.signAsync(
-        { type: 'access_token', sub: user.id },
-        { expiresIn: '15m' },
-      );
-      const refreshToken = await this.jwtService.signAsync(
-        { type: 'refresh_token', sub: user.id },
-        { expiresIn: '30d' },
-      );
-      return {
-        isLoginSuccessfull: true,
-        access_token: accessToken,
-        refreshToken: refreshToken,
-      };
-    } else {
-      throw new UnauthorizedException('Wrong login or password');
-    }
+    // try {
+      const user = await this.userRepository.findOneBy({
+        user_email: loginUserDto.email,
+      });
+      if (!user) {
+        throw new UnauthorizedException('Wrong login or password');
+      }
+      const isMatch = await bcrypt.compare(loginUserDto.password, user.password);
+      if (isMatch) {
+        const accessToken = await this.jwtService.signAsync(
+          { type: 'access_token', sub: user.id },
+          { expiresIn: '15m' },
+        );
+        const refreshToken = await this.jwtService.signAsync(
+          { type: 'refresh_token', sub: user.id },
+          { expiresIn: '30d' },
+        );
+        return {
+          isLoginSuccessfull: true,
+          access_token: accessToken,
+          refreshToken: refreshToken,
+        };
+      } else {
+        throw new UnauthorizedException('Wrong login or password');
+      }
+    // } catch (error) {
+    //   return error;
+    // } 
   }
 
   async refreshToken(refreshToken: string) {
