@@ -22,7 +22,7 @@ export class AuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
     const payload = await this.verifyToken(token);
-    request.headers.userId = payload.sub;
+    request.headers['user-id'] = `${payload.sub}`;
     return true;
   }
 
@@ -51,5 +51,5 @@ export class AuthGuard implements CanActivate {
 }
 
 export type ProtectedRequest<T = any> = Request<T> & {
-  headers: { userId: number };
+  headers: { userId: string };
 };

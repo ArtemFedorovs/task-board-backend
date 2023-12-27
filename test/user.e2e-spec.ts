@@ -191,14 +191,75 @@ describe('AppController (e2e)', () => {
     it('should get users profile', async () => {
       const response = await request(app.getHttpServer())
         .get('/users/profile')
-        .set('userId', '34')
+        .set('user-id', '34')
         .send()
         .expect(200);
 
       expect(response.body).toMatchObject({
-        name: 'strfdfing',
-        surname: 'strfdfing',
+        name: 'string',
+        surname: 'string',
       });
+    });
+  });
+
+  describe('/users/profile (PUT)', () => {
+    it('should update users profile', async () => {
+      const response = await request(app.getHttpServer())
+        .put('/users/profile')
+        .set('user-id', '34')
+        .send({
+          name: 'string',
+          surname: 'string',
+        })
+        .expect(200);
+
+      expect(response.body).toMatchObject({
+        message: 'Profile updated successfully',
+      });
+    });
+  });
+
+  describe('/users/subscribe/{taskId} (POST)', () => {
+    it('should subscride to existing task', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/users/subscribe/8')
+        .set('user-id', '34')
+        .send()
+        .expect(200);
+
+      expect(response.body).toMatchObject({
+        message: 'Successfully subscribed',
+      });
+    });
+
+    it('shouldnt subscride to not existing task', async () => {
+      await request(app.getHttpServer())
+        .post('/users/subscribe/999')
+        .set('user-id', '34')
+        .send()
+        .expect(404);
+    });
+  });
+
+  describe('/users/unsubscribe/{taskId} (POST)', () => {
+    it('should unsubscride to existing task', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/users/unsubscribe/8')
+        .set('user-id', '34')
+        .send()
+        .expect(200);
+
+      expect(response.body).toMatchObject({
+        message: 'Successfully unsubscribed',
+      });
+    });
+
+    it('shouldnt unsubscride to not existing task', async () => {
+      await request(app.getHttpServer())
+        .post('/users/unsubscribe/999')
+        .set('user-id', '34')
+        .send()
+        .expect(404);
     });
   });
 });

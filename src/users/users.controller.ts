@@ -69,7 +69,7 @@ export class UsersController {
   @Get('/profile')
   async getUserProfile(@Req() req: ProtectedRequest) {
     const userProfile = await this.usersService.getUserProfile(
-      req.headers.userId,
+      +req.headers['user-id'],
     );
     return userProfile;
   }
@@ -81,10 +81,11 @@ export class UsersController {
     @Req() req: ProtectedRequest,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    return await this.usersService.updateUserProfile(
-      req.headers.userId,
+    await this.usersService.updateUserProfile(
+      +req.headers['user-id'],
       updateUserDto,
     );
+    return { message: 'Profile updated successfully' };
   }
 
   @ApiBearerAuth()
@@ -96,7 +97,7 @@ export class UsersController {
     @Param('taskId') taskId: string,
   ) {
     await this.usersService.subscribeToTaskStatusChanges(
-      req.headers.userId,
+      +req.headers['user-id'],
       +taskId,
     );
     return { message: 'Successfully subscribed' };
@@ -111,7 +112,7 @@ export class UsersController {
     @Param('taskId') taskId: string,
   ) {
     await this.usersService.unSubscribeToTaskStatusChanges(
-      req.headers.userId,
+      +req.headers['user-id'],
       +taskId,
     );
     return { message: 'Successfully unsubscribed' };

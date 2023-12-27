@@ -29,7 +29,11 @@ export class TaskController {
     @Req() req: ProtectedRequest,
     @Param('boardId') boardId: string,
   ) {
-    await this.taskService.create(boardId, createTaskDto, req.headers.userId);
+    await this.taskService.create(
+      boardId,
+      createTaskDto,
+      +req.headers['user-id']
+    );
     return { message: 'Task created successfully' };
   }
 

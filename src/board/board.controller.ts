@@ -28,7 +28,7 @@ export class BoardController {
     try {
       const createdBoard = await this.boardService.create(
         createBoardDto,
-        req.headers.userId,
+        +req.headers['user-id'],
       );
       return { message: 'Board created successfully', board: createdBoard };
     } catch (error) {
