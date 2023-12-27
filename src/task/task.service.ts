@@ -167,12 +167,12 @@ export class TaskService {
       throw new NotFoundException('Task not found');
     }
 
-    task.title = updateTaskDetailsDto.title || task.title;
-    task.description = updateTaskDetailsDto.description || task.description;
+    task.title = updateTaskDetailsDto.title;
+    task.description = updateTaskDetailsDto.description;
 
-    if (updateTaskDetailsDto.assigned_user_id) {
+    if (updateTaskDetailsDto.assignedTo) {
       const assigned_user = await this.userRepository.findOneBy({
-        id: updateTaskDetailsDto.assigned_user_id,
+        id: updateTaskDetailsDto.assignedTo,
       });
       if (!assigned_user) {
         throw new NotFoundException('User not found');
@@ -181,7 +181,7 @@ export class TaskService {
     }
 
     if (updateTaskDetailsDto.status) {
-      task.status = updateTaskDetailsDto.status || task.status;
+      task.status = updateTaskDetailsDto.status;
       try {
         this.notificationGateway.sendMessageToClients(
           task.followers.map((user) => user.id),

@@ -32,7 +32,7 @@ export class TaskController {
     await this.taskService.create(
       boardId,
       createTaskDto,
-      +req.headers['user-id']
+      +req.headers['user-id'],
     );
     return { message: 'Task created successfully' };
   }

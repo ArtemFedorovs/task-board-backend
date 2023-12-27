@@ -14,7 +14,7 @@ import { UsersService } from '../src/users/users.service';
 import { UsersController } from '../src/users/users.controller';
 import { dataSourceСonfig } from '../src/config/data-source-config';
 
-describe('AppController (e2e)', () => {
+describe('UserController (e2e)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {

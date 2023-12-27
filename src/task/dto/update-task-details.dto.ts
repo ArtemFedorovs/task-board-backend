@@ -30,7 +30,7 @@ export class UpdateTaskDetailsDto {
   @IsInt()
   @Min(0)
   @ApiProperty()
-  assigned_user_id: number;
+  assignedTo: number;
 
   @IsOptional()
   @IsEnum(Status)
