@@ -7,6 +7,8 @@ import { dataSourceСonfig } from './config/data-source-config';
 import { NotificationModule } from './notification/notification.module';
 import { APP_FILTER } from '@nestjs/core';
 import { AllExceptionsFilter } from './core/all-exceptions.filter';
+import { TerminusModule } from '@nestjs/terminus';
+import { MonitoringModule } from './monitoring/monitoring.module';
 
 @Module({
   imports: [
@@ -17,6 +19,8 @@ import { AllExceptionsFilter } from './core/all-exceptions.filter';
     BoardModule,
     TaskModule,
     NotificationModule,
+    TerminusModule,
+    MonitoringModule,
   ],
   providers: [
     {
