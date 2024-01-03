@@ -107,22 +107,18 @@ export class TaskService {
       throw new NotFoundException('Task not found');
     }
 
-    try {
-      task.assigned_user = null;
-      task.creator = null;
-      task.board = null;
-      task.followers = [];
-      await this.taskRepository.save(task);
+    task.assigned_user = null;
+    task.creator = null;
+    task.board = null;
+    task.followers = [];
+    await this.taskRepository.save(task);
 
-      task = await this.taskRepository.findOne({
-        where: {
-          id: +taskId,
-        },
-      });
-      await this.taskRepository.delete(task);
-    } catch {
-      throw new InternalServerErrorException();
-    }
+    task = await this.taskRepository.findOne({
+      where: {
+        id: +taskId,
+      },
+    });
+    await this.taskRepository.delete(task);
   }
 
   async updateTaskStatus(

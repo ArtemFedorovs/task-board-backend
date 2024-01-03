@@ -21,7 +21,7 @@ export class Task {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @ManyToOne(() => Board, (user) => user.tasks)
+  @ManyToOne(() => Board, (board) => board.tasks)
   board: Board;
 
   @ManyToOne(() => User, (user) => user.created_tasks)

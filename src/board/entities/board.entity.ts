@@ -4,6 +4,8 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   OneToMany,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Task } from '../../task/entities/task.entity';
@@ -23,5 +25,11 @@ export class Board {
   owner: User;
 
   @OneToMany(() => Task, (task) => task.board, { nullable: true })
-  tasks: Task;
+  tasks: Task[];
+
+  @ManyToMany(() => User, {
+    nullable: true,
+  })
+  @JoinTable()
+  participants: User[];
 }

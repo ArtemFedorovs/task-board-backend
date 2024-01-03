@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtСonfig } from '../config/jwt-config';
 import { User } from '../users/entities/user.entity';
+import { AuthGuard } from '../core/auth.guard';
 
 @Module({
   imports: [
@@ -15,6 +16,6 @@ import { User } from '../users/entities/user.entity';
     }),
   ],
   controllers: [BoardController],
-  providers: [BoardService],
+  providers: [BoardService, AuthGuard],
 })
 export class BoardModule {}
