@@ -9,9 +9,15 @@ import { APP_FILTER } from '@nestjs/core';
 import { AllExceptionsFilter } from './core/all-exceptions.filter';
 import { TerminusModule } from '@nestjs/terminus';
 import { MonitoringModule } from './monitoring/monitoring.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'static'),
+      exclude: ['/api/(.*)'],
+    }),
     TypeOrmModule.forRootAsync({
       useFactory: () => dataSourceСonfig,
     }),

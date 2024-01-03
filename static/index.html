@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket.IO Chat</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
+</head>
+<body>
+    <h1>Socket.IO test</h1>
+    <ul id="messageList"></ul>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async() => {
+            const login = await prompt('Enter your login:');
+            const password = await prompt('Enter your password:');
+            const token = await fetch('http://localhost:3000/users/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email: login, password: password })
+            })
+            .then(response => {
+                return response.json();
+            })
+            .then(data => {
+                if (!data.isLoginSuccessfull) {
+                    const result = window.confirm('Wrong login or password');
+                    // if (result) {
+                    window.location.reload();
+                    // }
+                }
+                return data.access_token;
+            })
+            .catch(error => {
+                throw new Error(`HTTP error while authorization`);
+            });
+
+            const messageList = document.getElementById('messageList');
+
+            const socket = io('ws://localhost:3000', {
+                extraHeaders: {
+                    Authorization: token,
+                }
+            });
+
+            socket.on('connect', () => {
+                console.log('Socket.IO connected');
+                const listItem = document.createElement('li');
+                listItem.textContent = "Connected";
+                messageList.appendChild(listItem);
+            });
+
+            socket.on('notification', (message) => {
+                console.log('Received message:', message);
+                const listItem = document.createElement('li');
+                listItem.textContent = message;
+                messageList.appendChild(listItem);
+            });
+
+            socket.on('disconnect', () => {
+                console.log('Socket.IO disconnected');
+            });
+        });
+    </script>
+</body>
+</html>
