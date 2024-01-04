@@ -11,9 +11,11 @@ import { TerminusModule } from '@nestjs/terminus';
 import { MonitoringModule } from './monitoring/monitoring.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'static'),
       exclude: ['/api/(.*)'],

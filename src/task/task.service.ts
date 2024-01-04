@@ -14,6 +14,7 @@ import { User } from '../users/entities/user.entity';
 import { Repository } from 'typeorm';
 import { Status } from './constants';
 import { NotificationGateway } from '../notification/notification.gateway';
+import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class TaskService {
@@ -212,5 +213,21 @@ export class TaskService {
 
     task.assigned_user = user;
     await this.taskRepository.save(task);
+  }
+
+  @Cron('0 */15 * * * *')
+  async handleCron() {
+    const currentDate = new Date();
+    const fifteenMinutesFromNow = new Date(currentDate.getTime() + 15 * 60000);
+    const tasks = await this.taskRepository
+      .createQueryBuilder('user')
+      .where('user.expired_at >= :currentDate', { currentDate })
+      .andWhere('user.expired_at <= :fifteenMinutesFromNow', {
+        fifteenMinutesFromNow,
+      })
+      .getMany();
+    for (const task of tasks) {
+      this.updateTaskStatus({ status: Status.CLOSED }, task.id);
+    }
   }
 }
