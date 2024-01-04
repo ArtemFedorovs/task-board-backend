@@ -140,7 +140,7 @@ export class TaskService {
     this.notificationGateway.sendMessageToClients(
       task.followers.map((user) => user.id),
       'notification',
-      `Status of task "${task.title}" was changed to "${task.status}"`,
+      `Status of task "${task.title}" was changed to "${updateTaskStatusDto.status}"`,
     );
     task.status = updateTaskStatusDto.status;
     return await this.taskRepository.save(task);
@@ -183,7 +183,7 @@ export class TaskService {
         this.notificationGateway.sendMessageToClients(
           task.followers.map((user) => user.id),
           'notification',
-          `Status of task "${task.title}" was changed to "${task.status}"`,
+          `Status of task "${task.title}" was changed to "${updateTaskDetailsDto.status}"`,
         );
       } catch {
         throw new InternalServerErrorException();
@@ -217,17 +217,23 @@ export class TaskService {
 
   @Cron('0 */15 * * * *')
   async handleCron() {
-    const currentDate = new Date();
-    const fifteenMinutesFromNow = new Date(currentDate.getTime() + 15 * 60000);
-    const tasks = await this.taskRepository
-      .createQueryBuilder('user')
-      .where('user.expired_at >= :currentDate', { currentDate })
-      .andWhere('user.expired_at <= :fifteenMinutesFromNow', {
-        fifteenMinutesFromNow,
-      })
-      .getMany();
-    for (const task of tasks) {
-      this.updateTaskStatus({ status: Status.CLOSED }, task.id);
+    try {
+      const currentDate = new Date();
+      const fifteenMinutesFromNow = new Date(
+        currentDate.getTime() + 15 * 60000,
+      );
+      const tasks = await this.taskRepository
+        .createQueryBuilder('task')
+        .where('task.expired_at >= :currentDate', { currentDate })
+        .andWhere('task.expired_at <= :fifteenMinutesFromNow', {
+          fifteenMinutesFromNow,
+        })
+        .getMany();
+      for (const task of tasks) {
+        this.updateTaskStatus({ status: Status.CLOSED }, task.id);
+      }
+    } catch (error) {
+      console.log(error);
     }
   }
 }

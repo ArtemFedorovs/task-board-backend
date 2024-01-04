@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { NotificationService } from './notification.service';
 import { NotificationGateway } from './notification.gateway';
 import { ConfigModule } from '@nestjs/config';
 import { jwtСonfig } from '../config/jwt-config';
@@ -13,6 +12,6 @@ import { AuthGuard } from '../core/auth.guard';
       useFactory: () => jwtСonfig,
     }),
   ],
-  providers: [NotificationGateway, NotificationService, AuthGuard],
+  providers: [NotificationGateway, AuthGuard],
 })
 export class NotificationModule {}

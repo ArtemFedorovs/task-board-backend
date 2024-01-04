@@ -37,7 +37,7 @@ export class Task {
   })
   status: Status;
 
-  @Column({ type: 'date', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   expired_at: Date;
 
   @ManyToMany(() => User, {

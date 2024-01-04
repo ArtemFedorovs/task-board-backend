@@ -7,33 +7,46 @@ export class NotificationGateway {
   constructor(private readonly authGuard: AuthGuard) {}
 
   @WebSocketServer() server: Server;
-  private readonly userConnections = new Map<number, Socket>();
+  private readonly userConnections: Socket[] = [];
+  private readonly delayedMessages: string[][] = [];
 
   async handleConnection(client: Socket) {
     try {
       const payload = await this.authGuard.verifyToken(
         client.handshake.headers.authorization,
       );
-      this.userConnections.set(+payload.sub, client);
-    } catch {
+      const clientId = +payload.sub;
+      this.userConnections[clientId] = client;
+
+      this.delayedMessages[clientId] &&
+        this.delayedMessages[clientId].forEach((clientMessage) =>
+          this.sendMessageToClient(clientId, 'notification', clientMessage),
+        );
+      this.delayedMessages[clientId] = undefined;
+    } catch (error) {
+      console.log(error);
       client.disconnect();
     }
   }
 
   handleDisconnect(client: any) {
-    for (const [key, value] of this.userConnections.entries()) {
-      if (value === client) {
-        this.userConnections.delete(key);
-        break;
-      }
-    }
+    const clientId = this.userConnections.findIndex(
+      (connection) => connection === client,
+    );
+    this.userConnections[clientId] = undefined;
   }
 
   sendMessageToClient(clientId: number, event: string, message: string) {
-    const client = this.userConnections.get(clientId);
+    const client = this.userConnections[clientId];
     console.log(`Sending message to ${clientId}: ${message}`);
     if (client) {
       client.emit(event, message);
+    } else {
+      if (this.delayedMessages[clientId]) {
+        this.delayedMessages[clientId].push(message);
+      } else {
+        this.delayedMessages[clientId] = [message];
+      }
     }
   }
 

@@ -27,9 +27,7 @@
             .then(data => {
                 if (!data.isLoginSuccessfull) {
                     const result = window.confirm('Wrong login or password');
-                    // if (result) {
                     window.location.reload();
-                    // }
                 }
                 return data.access_token;
             })
@@ -46,7 +44,6 @@
             });
 
             socket.on('connect', () => {
-                console.log('Socket.IO connected');
                 const listItem = document.createElement('li');
                 listItem.textContent = "Connected";
                 messageList.appendChild(listItem);
@@ -60,7 +57,9 @@
             });
 
             socket.on('disconnect', () => {
-                console.log('Socket.IO disconnected');
+                const listItem = document.createElement('li');
+                listItem.textContent = "Disconnected";
+                messageList.appendChild(listItem);
             });
         });
     </script>

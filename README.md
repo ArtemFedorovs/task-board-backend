@@ -31,8 +31,6 @@ go to http://localhost:3000 to view websocket notification interface.
 # e2e tests
 $ npm run test:e2e
 
-# test coverage
-$ npm run test:cov
 ```
 
 ## Migration
